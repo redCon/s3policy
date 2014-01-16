@@ -38,18 +38,22 @@ function s3instance(accessKey, secretKey) {
         }
     };
 
-    this.writePolicy = function(key, bucket, duration, filesize, cb) {
-        var dateObj = new Date;
-        var dateExp = new Date(dateObj.getTime() + duration * 1000);
-        var policy = {
-            "expiration":dateExp.getUTCFullYear() + "-" + dateExp.getUTCMonth() + 1 + "-" + dateExp.getUTCDate() + "T" + dateExp.getUTCHours() + ":" + dateExp.getUTCMinutes() + ":" + dateExp.getUTCSeconds() + "Z",
-            "conditions":[
-                { "bucket":bucket },
-                ["eq", "$key", key],
-                { "acl":"private" },
-                ["content-length-range", 0, filesize * 1000000],
-                ["starts-with", "$Content-Type", ""]
-            ]
+    this.writePolicy = function(key, bucket, options, cb) {
+      var filesize = options.filesize || 2
+      var duration = options.duration || 120
+      var acl = options.acl || 'private'
+
+      var dateObj = new Date;
+      var dateExp = new Date(dateObj.getTime() + duration * 1000);
+      var policy = {
+        "expiration":dateExp.getUTCFullYear() + "-" + dateExp.getUTCMonth() + 1 + "-" + dateExp.getUTCDate() + "T" + dateExp.getUTCHours() + ":" + dateExp.getUTCMinutes() + ":" + dateExp.getUTCSeconds() + "Z",
+        "conditions":[
+          { "bucket":bucket },
+          ["eq", "$key", key],
+          { "acl":policy || acl },
+          ["content-length-range", 0, filesize * 1000000],
+          ["starts-with", "$Content-Type", ""]
+        ]
         };
 
         var policyString = JSON.stringify(policy);
